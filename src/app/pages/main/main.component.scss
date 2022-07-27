@@ -1,0 +1,16 @@
+@font-face {
+    font-family: clacon2;
+    src: local("clacon2"), url("../../../assets/font/clacon2.ttf") format("truetype");
+}
+
+.root {
+    font-family: clacon2;
+    color: white;
+    background-color: black;
+    width: 100vw;
+    height: 100vh;
+}
+
+.root > * {
+    margin: 5px;
+}
