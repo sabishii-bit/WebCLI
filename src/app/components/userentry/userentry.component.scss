@@ -1,0 +1,49 @@
+@font-face {
+    font-family: clacon2;
+    src: local("clacon2"), url("../../../assets/font/clacon2.ttf") format("truetype");
+}
+
+.main-container {
+    margin-left: 10px;
+    // DEBUG:
+    //border: 1px red solid;
+}
+
+.prompt {
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.cursor {
+    opacity: 100;
+    cursor: default;
+    animation: 1s blink step-end infinite;
+    display: inline-block;
+}
+
+.entry {
+    height: auto;
+    border: none;
+    background-color: transparent;
+    color: white;
+    caret-color: transparent;
+    outline: none;
+    font-family: clacon2;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: default;
+    pointer-events: none;
+    // DEBUG:
+    //border: 1px blue solid;
+}
+
+@keyframes blink {
+    from, to {
+        color: transparent;
+    }
+
+    50% {
+        color: white;
+    }
+}
+

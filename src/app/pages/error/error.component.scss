@@ -32,6 +32,10 @@
     backdrop-filter: blur(6px);
     overflow-x: hidden;
     overflow-y: auto;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .container::-webkit-scrollbar {

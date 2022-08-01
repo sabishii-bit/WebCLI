@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
+import { IpServiceService } from 'src/app/services/ip-service/ip-service.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-userentry',
@@ -7,9 +9,151 @@ import { Component, OnInit } from '@angular/core';
 })
 export class UserentryComponent implements OnInit {
 
-  constructor() { }
+  DOM_inputArea: any;
+  DOM_cursor: any;
+  inputValue: string;           // What's currently held in the input element
+  commandHistory: string[];     // History of all commands submitted in session
+  historyPointer: number;           // Pointer for which command in the history we're at
+  tempStorage: string;          // Temporary storage for a command
 
-  ngOnInit(): void {
+  readonly STYLE_cursorInitialPos: any;               // Initial position of the cursor. Subject to change on mobile view.
+  readonly STYLE_inputAreaInitialWidth: any; // Initial position of the input area. Don't let it go below 8px
+
+  public user: string;                       // Denotes the prompt for user, contains IP address and who the user is.
+
+  @Output() command = new EventEmitter<string>();  // Returns output string if enter key is pressed
+
+  constructor(private ipservice: IpServiceService, private ref: ChangeDetectorRef) { 
+    this.user = '';
+    this.inputValue = '';
+    this.tempStorage = '';
+    this.commandHistory = [];
+    this.historyPointer = 0;
+    this.STYLE_cursorInitialPos = 0;
+    this.STYLE_inputAreaInitialWidth = 0;
   }
+
+  async ngOnInit(): Promise<void> {
+    await this.getTerminalUser();
+    // Set the cursor here after the prompt has been built
+    //this.setCursorInitialPosition();
+  }
+
+  /*
+  * Returns the user of the terminal.
+  */
+  async getTerminalUser() {
+    this.ipservice.getIPAddress();
+    try {
+      this.ipservice.getIPAddress().subscribe((res:any) => {
+        this.user = res.ip + '@visitor:->';
+      });
+    } catch {
+      // Couldn't connect with API, default to something else
+    }
+
+    if (this.user == '') {
+      this.user = '127.0.0.1' + '@visitor:->';
+    }
+
+  }
+
+  /* 
+  * Handles altering DOM elements to changing input. Filters invalid keyCodes.
+  */
+  filterTextInput(keyPress: any): void {
+    const specialKeyCodes = [17, 91, 18, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 145, 19, 93, 16, 20, 9, 27, 45, 36, 46, 33, 34, 35, 144, 111, 106, 109, 36, 38, 33, 107, 37, 12, 39, 35, 40, 34, 13, 45, 46, 145];
+
+    // Export input on Enter keyPress and clear the value being held
+    if (keyPress.keyCode == 13) {
+      this.commandHistory.push(this.inputValue);  // Add the input to the history
+      let outboundString = this.exportLine();     // Build the export string
+      this.inputValue = '';                       // Reset the input area
+      this.historyPointer = 0;
+      this.resetInputField();
+      this.command.emit(outboundString);
+      this.keepUserEntryInView();                 // Keep the entry area in view
+
+    // Using the up and down arrow keys should scroll the user through the command history.
+    } else if (keyPress.keyCode == 38 || keyPress.keyCode == 40) {
+      //this.scrollCommandHistory(keyPress);
+      keyPress.preventDefault();
+    // Prevent user from using left/right arrow keys. This functionality may change at a later date.
+    } else if (keyPress.keyCode == 37 || keyPress.keyCode == 39) {
+      keyPress.preventDefault();
+
+    // Handle characters being entered into the field
+    } else if (!(specialKeyCodes.includes(keyPress.keyCode))) {
+      this.moveInputToTextWidth(keyPress.keyCode);
+    }
+  }
+
+  /*
+  * Forces user to only have focus on the input area. Unfocusing should result in this function being immediately called.
+  */
+  forceFocus(): void {
+    document.getElementById('DOM_inputArea')?.focus();
+  }
+
+  /*
+  * Attaches user prompt to command entered and sends it to the logHistory component to be displayed.
+  */
+  exportLine(): string {
+    let input: string = (<HTMLInputElement>document.getElementById('DOM_inputArea'))?.value;
+    let outboundString: string = this.user + ' ' + input;
+    return outboundString;
+  }
+
+  private moveInputToTextWidth(keyCode: any): void {
+
+    const inputLength = this.inputValue.length;
+    const charWidth = 8;
+    let inputWidth: number = 0;
+    if (keyCode != 8)
+      inputWidth = charWidth + (inputLength * charWidth);
+    else if (keyCode == 8 && this.inputValue.length-1 > 0)
+      inputWidth = (inputLength * charWidth) - 8;
+    const STYLE_inputWidth = 'width:'+inputWidth+'px;';
+    document.getElementById('DOM_inputArea')?.setAttribute('style', STYLE_inputWidth);
+  }
+
+  // Prevents user entry field from being obfuscated on overflow-y
+  private keepUserEntryInView() {
+    document.getElementById('DOM_mainContainer')?.scrollIntoView();
+  }
+
+  resetInputField() {
+    document.getElementById('DOM_inputArea')?.setAttribute('style', 'width:0px;');
+    document.getElementById('DOM_cursor')?.setAttribute('style', 'left:'+this.STYLE_cursorInitialPos+'px;');
+  }
+
+  /*
+  * TO DO: Figure out what's wrong with this
+  */
+  private scrollCommandHistory(keyPress: any): void {
+    
+    // Scroll to older commands on key up
+    if (keyPress.keyCode == 38) {
+
+      if (this.commandHistory.length >= this.historyPointer+1) {
+        this.inputValue = this.commandHistory[this.historyPointer];
+        this.historyPointer += 1;
+        this.moveInputToTextWidth(null);
+        return;
+      }
+    // Scroll to newer commands on key down
+    } else if (keyPress.keyCode == 40) {
+
+      if (this.commandHistory.length <= this.historyPointer-1) {
+        this.inputValue = this.commandHistory[this.historyPointer];
+        this.historyPointer -= 1;
+        this.moveInputToTextWidth(null);
+        return;
+      } else {
+        this.inputValue = '';
+      }
+    }
+  }
+  
 
 }

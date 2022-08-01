@@ -1,3 +1,6 @@
 <div class="root">
-    <app-userentry></app-userentry>
+    <div class="container">
+        <app-log-history [incomingCommand]="command_SIGNED"></app-log-history>
+        <app-userentry (command)="processCommand($event)"></app-userentry>
+    </div>
 </div>
