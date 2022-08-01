@@ -83,7 +83,8 @@ export class UserentryComponent implements OnInit {
       keyPress.preventDefault();
 
     // Handle characters being entered into the field
-    } else if (!(specialKeyCodes.includes(keyPress.keyCode))) {
+    } else if (!(specialKeyCodes.includes(keyPress.keyCode)) && (keyPress instanceof KeyboardEvent)) {
+      console.log(keyPress);
       this.moveInputToTextWidth(keyPress.keyCode);
     }
   }
@@ -117,12 +118,21 @@ export class UserentryComponent implements OnInit {
     document.getElementById('DOM_inputArea')?.setAttribute('style', STYLE_inputWidth);
   }
 
+  onPaste(event: ClipboardEvent) {
+    const clipboardData = event.clipboardData || (<any>window).clipboardData;
+    const pastedText = clipboardData.getData('text');
+    const charWidth = 8;
+    const currentWidth = document.getElementById('DOM_inputArea')?.getBoundingClientRect().width!;
+    const inputWidth = (charWidth * pastedText.length) + currentWidth;
+    document.getElementById('DOM_inputArea')?.setAttribute('style', 'width:'+inputWidth+'px;');
+  }
+
   // Prevents user entry field from being obfuscated on overflow-y
   private keepUserEntryInView() {
     document.getElementById('DOM_mainContainer')?.scrollIntoView();
   }
 
-  resetInputField() {
+  private resetInputField() {
     document.getElementById('DOM_inputArea')?.setAttribute('style', 'width:0px;');
     document.getElementById('DOM_cursor')?.setAttribute('style', 'left:'+this.STYLE_cursorInitialPos+'px;');
   }

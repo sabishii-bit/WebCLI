@@ -5,6 +5,7 @@
 
 .main-container {
     margin-left: 10px;
+    overflow-x: hidden;
     // DEBUG:
     //border: 1px red solid;
 }
@@ -33,6 +34,7 @@
     font-size: 16px;
     cursor: default;
     pointer-events: none;
+    overflow-x: hidden;
     // DEBUG:
     //border: 1px blue solid;
 }

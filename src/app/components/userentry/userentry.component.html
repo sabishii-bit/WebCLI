@@ -1,7 +1,7 @@
 <div class="main-container" id="DOM_mainContainer">
     <div class="prompt" id="DOM_userPrompt">{{user}}</div>
     <input class="entry" type="text" id="DOM_inputArea" [(ngModel)]="inputValue" name="DOM_inputArea" (keydown)="filterTextInput($event)" (focusout)="forceFocus()"
-     autofocus spellcheck="false" [style.width.px]="STYLE_inputAreaInitialWidth">
+     autofocus spellcheck="false" [style.width.px]="STYLE_inputAreaInitialWidth" (paste)="onPaste($event)">
 
     <div class="cursor" id="DOM_cursor" name="DOM_cursor" [style.left.px]="STYLE_cursorInitialPos"><b>█</b></div>
 </div>

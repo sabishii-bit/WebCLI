@@ -1,4 +1,5 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { DeviceDetectorService } from 'ngx-device-detector';
 
 @Component({
   selector: 'app-log-history',
@@ -8,12 +9,13 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/cor
 export class LogHistoryComponent implements OnChanges {
 
   @Input() incomingCommand: string;
+  @Output() outgoingToken = new EventEmitter<string>();
   
   history: any[];
   JSON_incomingCommand: any;
   displayGreetings: boolean;
 
-  constructor() {
+  constructor(private deviceDetector: DeviceDetectorService) {
     this.history = [];
     this.incomingCommand = '';
     this.displayGreetings = true;
@@ -25,9 +27,9 @@ export class LogHistoryComponent implements OnChanges {
     if (this.incomingCommand != '') {
       this.JSON_incomingCommand = JSON.parse(this.incomingCommand);
 
-      this.parseCommands(this.JSON_incomingCommand.value)
       if (this.JSON_incomingCommand != null) {
-        this.updateView();
+        this.addCommandToHistory(this.JSON_incomingCommand.value);
+        this.parseCommands(this.JSON_incomingCommand.value);
       }
     }
   }
@@ -44,15 +46,27 @@ export class LogHistoryComponent implements OnChanges {
     if (command[1].toUpperCase() == 'CLEAR') {
       this.command_CLEAR();
       return;
+
     } else if (command[1].toUpperCase() == 'GREETME') {
       this.command_GREETINGS();
       return;
+
+    } else if (command[1].toUpperCase() == 'SET-BACKGROUND') {
+      if (command[2]) {
+        this.command_BACKGROUND(command);
+      } else {
+        this.history.push('ERROR: set-background command requires an image URL for the background to be set to.');
+        this.history.push('Example: \'set-background https://website.com/image.png\'');
+      }
+
+    } else if (command[1].toUpperCase() == 'WHOAMI') {
+      this.command_WHOAMI();
     }
 
   }
 
-  private updateView() {
-    this.history.push(this.JSON_incomingCommand.value);
+  private addCommandToHistory(command: any) {
+    this.history.push(command);
   }
 
   /*
@@ -67,6 +81,24 @@ export class LogHistoryComponent implements OnChanges {
 
   private command_GREETINGS() {
     this.displayGreetings = true;
+    return;
+  }
+
+  private command_BACKGROUND(command: any) {
+    this.outgoingToken.emit(command);
+    return;
+  }
+
+  private command_WHOAMI() {
+    const userInfo = this.deviceDetector.getDeviceInfo();
+    this.history.push('*-- This is the information I could retrieve about you --*');
+    this.history.push('Browser: '+userInfo.browser);
+    this.history.push('Version: '+userInfo.browser_version);
+    this.history.push('Device: '+userInfo.deviceType);
+    this.history.push('Orientation: '+userInfo.orientation);
+    this.history.push('Operating System: '+userInfo.os_version);
+    this.history.push('UserAgent: '+userInfo.userAgent);
+    return;
   }
 
 }
