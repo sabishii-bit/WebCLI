@@ -1,5 +1,5 @@
 <div class="main-container" id="DOM_mainContainer">
-    <div class="prompt" id="DOM_userPrompt">{{user}}</div>
+    <div class="prompt" id="DOM_userPrompt" [innerHTML]="user"></div>
     <input class="entry" type="text" id="DOM_inputArea" [(ngModel)]="inputValue" name="DOM_inputArea" (keydown)="filterTextInput($event)" (focusout)="forceFocus()"
      autofocus spellcheck="false" [style.width.px]="STYLE_inputAreaInitialWidth" (paste)="onPaste($event)">
 

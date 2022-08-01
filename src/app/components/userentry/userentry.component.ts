@@ -40,7 +40,7 @@ export class UserentryComponent implements OnInit {
   }
 
   /*
-  * Returns the user of the terminal.
+  * Returns the user of the terminal. Currently only creates prompt strings for visitors.
   */
   async getTerminalUser() {
     this.ipservice.getIPAddress();
@@ -83,9 +83,14 @@ export class UserentryComponent implements OnInit {
       keyPress.preventDefault();
 
     // Handle characters being entered into the field
-    } else if (!(specialKeyCodes.includes(keyPress.keyCode)) && (keyPress instanceof KeyboardEvent)) {
-      console.log(keyPress);
+    } else if (!(specialKeyCodes.includes(keyPress.keyCode)) && (keyPress instanceof KeyboardEvent) && !(keyPress.ctrlKey)) {
       this.moveInputToTextWidth(keyPress.keyCode);
+    
+    // Allow onPaste events to occur
+    } else if (keyPress.keyCode == 86 && keyPress.ctrlKey) {
+      return;
+    } else {
+      keyPress.preventDefault();
     }
   }
 
@@ -105,11 +110,13 @@ export class UserentryComponent implements OnInit {
     return outboundString;
   }
 
+  // Updates the size of the input field to added characters
   private moveInputToTextWidth(keyCode: any): void {
 
     const inputLength = this.inputValue.length;
     const charWidth = 8;
     let inputWidth: number = 0;
+    console.log(inputLength, this.inputValue);
     if (keyCode != 8)
       inputWidth = charWidth + (inputLength * charWidth);
     else if (keyCode == 8 && this.inputValue.length-1 > 0)
@@ -118,6 +125,7 @@ export class UserentryComponent implements OnInit {
     document.getElementById('DOM_inputArea')?.setAttribute('style', STYLE_inputWidth);
   }
 
+  // Keeps the input width updated to paste events
   onPaste(event: ClipboardEvent) {
     const clipboardData = event.clipboardData || (<any>window).clipboardData;
     const pastedText = clipboardData.getData('text');

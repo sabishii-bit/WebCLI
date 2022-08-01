@@ -40,33 +40,55 @@ export class LogHistoryComponent implements OnChanges {
   private parseCommands(command: any) {
 
     // Tokenize the incoming command by spaces. [0] will always be the user prompt.
-    command = command.split(' ');
+    command = this.tokenizeCommand(command);
 
     // Flushes out the history
-    if (command[1].toUpperCase() == 'CLEAR') {
+    if (command[0].toUpperCase() == 'CLEAR') {
       this.command_CLEAR();
       return;
 
-    } else if (command[1].toUpperCase() == 'GREETME') {
+    } else if (command[0].toUpperCase() == 'GREETME') {
       this.command_GREETINGS();
       return;
 
-    } else if (command[1].toUpperCase() == 'SET-BACKGROUND') {
-      if (command[2]) {
+    } else if (command[0].toUpperCase() == 'SET-BACKGROUND') {
+      if (command[1] && command[1].includes('.jpg') || command[1].includes('.png') || command[1].includes('.webp') || command[1].includes('.gif') || command[1].includes('.jpeg')
+      || command[1].includes('.bmp')) {
         this.command_BACKGROUND(command);
       } else {
-        this.history.push('ERROR: set-background command requires an image URL for the background to be set to.');
+        this.history.push('<font color="red">ERROR:</font> set-background command requires an image URL for the background to be set to.');
         this.history.push('Example: \'set-background https://website.com/image.png\'');
       }
 
-    } else if (command[1].toUpperCase() == 'WHOAMI') {
+    } else if (command[0].toUpperCase() == 'WHOAMI') {
       this.command_WHOAMI();
+    } else {
+      this.defaultResponse();
     }
 
   }
 
+  private tokenizeCommand(args: string) {
+    // Split tokens up by space character
+    let tokens = args.split(' ');
+
+    // Filter out any extra spacing
+    tokens = tokens.filter((value) => {
+      return value != ' ';
+    });
+
+    // Remove the first index as it contains the user prompt
+    tokens.shift();
+
+    return tokens;
+  }
+
   private addCommandToHistory(command: any) {
     this.history.push(command);
+  }
+
+  private defaultResponse() {
+    this.history.push('<font color="red">ERROR:</font> Need to enter a valid command!');
   }
 
   /*
@@ -85,19 +107,19 @@ export class LogHistoryComponent implements OnChanges {
   }
 
   private command_BACKGROUND(command: any) {
-    this.outgoingToken.emit(command);
+    this.outgoingToken.emit(command);   // This needs to be submitted back to the root element to display background images
     return;
   }
 
   private command_WHOAMI() {
     const userInfo = this.deviceDetector.getDeviceInfo();
-    this.history.push('*-- This is the information I could retrieve about you --*');
-    this.history.push('Browser: '+userInfo.browser);
-    this.history.push('Version: '+userInfo.browser_version);
-    this.history.push('Device: '+userInfo.deviceType);
-    this.history.push('Orientation: '+userInfo.orientation);
-    this.history.push('Operating System: '+userInfo.os_version);
-    this.history.push('UserAgent: '+userInfo.userAgent);
+    this.history.push('<font color="yellow">*-- This is the information I could retrieve about you --*</font>');
+    this.history.push('<font color="cyan">Browser:</font> '+userInfo.browser);
+    this.history.push('<font color="cyan">Browser Version:</font> '+userInfo.browser_version);
+    this.history.push('<font color="cyan">Device:</font> '+userInfo.deviceType);
+    this.history.push('<font color="cyan">Orientation:</font> '+userInfo.orientation);
+    this.history.push('<font color="cyan">Operating System:</font> '+userInfo.os_version);
+    this.history.push('<font color="cyan">UserAgent:</font> '+userInfo.userAgent);
     return;
   }
 

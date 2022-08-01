@@ -19,21 +19,24 @@ export class MainComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Set the background to whatever the user has set in local storage
     if (!!localStorage.getItem('background')) {
       document.getElementById('root')?.setAttribute('style', 'background-image: url("'+localStorage.getItem('background')+'");');
     }
   }
 
+  // This is an outgoing command that needs to be processed first
   processCommand(iCommand: string) {
     this.command = iCommand;
     this.signCommand(iCommand);
     this.command_SIGNED = JSON.stringify(this.signCommand(iCommand));
   }
 
+  // This is an incoming command that has been tokenized and needs to processed
   processToken(iToken: any) {
     this.tokens = iToken;
-    if (this.tokens[1].toUpperCase() == 'SET-BACKGROUND') {
-      this.command_BACKGROUND(this.tokens[2]);
+    if (this.tokens[0].toUpperCase() == 'SET-BACKGROUND') {
+      this.command_BACKGROUND(this.tokens[1]);
     }
   }
 
