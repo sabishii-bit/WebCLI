@@ -1,5 +1,5 @@
 <div class="root" id="root">
-    <div class="container">
+    <div class="container" [style.border-color]="STYLE_borderColor">
         <app-log-history [incomingCommand]="command_SIGNED" (outgoingToken)="processToken($event)"></app-log-history>
         <app-userentry (command)="processCommand($event)"></app-userentry>
     </div>

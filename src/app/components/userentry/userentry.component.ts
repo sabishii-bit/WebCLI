@@ -12,7 +12,7 @@ export class UserentryComponent implements OnInit {
   DOM_inputArea: any;
   DOM_cursor: any;
   inputValue: string;           // What's currently held in the input element
-  commandHistory: string[];     // History of all commands submitted in session
+  commandHistory: any[];     // History of all commands submitted in session
   historyPointer: number;           // Pointer for which command in the history we're at
   tempStorage: string;          // Temporary storage for a command
 
@@ -28,7 +28,7 @@ export class UserentryComponent implements OnInit {
     this.inputValue = '';
     this.tempStorage = '';
     this.commandHistory = [];
-    this.historyPointer = 0;
+    this.historyPointer = -1;
     this.STYLE_cursorInitialPos = 0;
     this.STYLE_inputAreaInitialWidth = 0;
   }
@@ -37,6 +37,7 @@ export class UserentryComponent implements OnInit {
     await this.getTerminalUser();
     // Set the cursor here after the prompt has been built
     //this.setCursorInitialPosition();
+    
   }
 
   /*
@@ -66,17 +67,17 @@ export class UserentryComponent implements OnInit {
 
     // Export input on Enter keyPress and clear the value being held
     if (keyPress.keyCode == 13) {
-      this.commandHistory.push(this.inputValue);  // Add the input to the history
+      this.commandHistory.push(this.inputValue);  // Add the input metadata to the history
       let outboundString = this.exportLine();     // Build the export string
       this.inputValue = '';                       // Reset the input area
-      this.historyPointer = 0;
+      this.historyPointer = -1;
       this.resetInputField();
       this.command.emit(outboundString);
       this.keepUserEntryInView();                 // Keep the entry area in view
 
     // Using the up and down arrow keys should scroll the user through the command history.
     } else if (keyPress.keyCode == 38 || keyPress.keyCode == 40) {
-      //this.scrollCommandHistory(keyPress);
+      this.scrollCommandHistory(keyPress);
       keyPress.preventDefault();
     // Prevent user from using left/right arrow keys. This functionality may change at a later date.
     } else if (keyPress.keyCode == 37 || keyPress.keyCode == 39) {
@@ -112,11 +113,14 @@ export class UserentryComponent implements OnInit {
 
   // Updates the size of the input field to added characters
   private moveInputToTextWidth(keyCode: any): void {
-
-    const inputLength = this.inputValue.length;
+    let inputLength;
+    if (this.inputValue?.length === undefined) {
+      inputLength = 0;
+    } else {
+      inputLength = this.inputValue.length;
+    }
     const charWidth = 8;
     let inputWidth: number = 0;
-    console.log(inputLength, this.inputValue);
     if (keyCode != 8)
       inputWidth = charWidth + (inputLength * charWidth);
     else if (keyCode == 8 && this.inputValue.length-1 > 0)
@@ -145,31 +149,57 @@ export class UserentryComponent implements OnInit {
     document.getElementById('DOM_cursor')?.setAttribute('style', 'left:'+this.STYLE_cursorInitialPos+'px;');
   }
 
+  // TODO: Doesn't work with in-line style. Find work-around.
+  private hideCursor() {
+    document.getElementById('DOM_cursor')?.setAttribute('style', 'right:'+100+'vw;');
+  }
+
   /*
   * TO DO: Figure out what's wrong with this
   */
   private scrollCommandHistory(keyPress: any): void {
+
+    if (this.commandHistory.length === undefined) {
+      return;
+    }
+
+    let reformattedHistory = this.commandHistory.slice().reverse();      // The array is reversed to give it a proper stack placement
     
+    // historyPointer must be clamped on the array size of commandHistory
     // Scroll to older commands on key up
     if (keyPress.keyCode == 38) {
 
-      if (this.commandHistory.length >= this.historyPointer+1) {
-        this.inputValue = this.commandHistory[this.historyPointer];
-        this.historyPointer += 1;
+      if (reformattedHistory.length-1 >= this.historyPointer) {
+        if (this.historyPointer == -1) {
+          this.historyPointer += 1;
+          this.inputValue = reformattedHistory[this.historyPointer];
+        } else if (this.historyPointer != reformattedHistory.length) {
+          if (this.historyPointer != reformattedHistory.length-1) {
+            this.historyPointer += 1;
+            this.inputValue = reformattedHistory[this.historyPointer];
+          }
+          this.hideCursor();
+        }
         this.moveInputToTextWidth(null);
+        return;
+      } else {
         return;
       }
     // Scroll to newer commands on key down
     } else if (keyPress.keyCode == 40) {
 
-      if (this.commandHistory.length <= this.historyPointer-1) {
-        this.inputValue = this.commandHistory[this.historyPointer];
+      if (this.historyPointer != -1) {
         this.historyPointer -= 1;
-        this.moveInputToTextWidth(null);
-        return;
+        this.hideCursor();
       } else {
+        this.historyPointer = -1
         this.inputValue = '';
+        this.resetInputField();
+        return;
       }
+      this.inputValue = reformattedHistory[this.historyPointer];
+      this.moveInputToTextWidth(null);
+      return;
     }
   }
   

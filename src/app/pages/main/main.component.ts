@@ -11,18 +11,29 @@ export class MainComponent implements OnInit {
   command: string;         // Command received from UserEntry component
   command_SIGNED: string;  // Signed command to be sent to other components
   tokens: any;              // Token received from component to be processed
+  STYLE_borderColor: any;   // Border color for the console window
+  STYLE_rgb: any;           // Helper object with border color
 
   constructor() {
     this.command = '';
     this.command_SIGNED = '';
-    this.tokens = null;
+    this.tokens = null;    
+    this.STYLE_rgb = {
+      r: 0,
+      g: 0,
+      b: 255
+    }
+    this.STYLE_borderColor = "rgb("+ this.STYLE_rgb.r + ',' + this.STYLE_rgb.g + ',' + this.STYLE_rgb.b + ")";
   }
 
-  ngOnInit(): void {
+  async ngOnInit() {
     // Set the background to whatever the user has set in local storage
     if (!!localStorage.getItem('background')) {
       document.getElementById('root')?.setAttribute('style', 'background-image: url("'+localStorage.getItem('background')+'");');
     }
+
+    // Begin animating the console border
+    this.alternateBorderColor()
   }
 
   // This is an outgoing command that needs to be processed first
@@ -66,5 +77,25 @@ export class MainComponent implements OnInit {
     }
   }
   
+  // Animates the color rotation on the border for the console window
+  private alternateBorderColor() {
+    setInterval(() => {
+      if (this.STYLE_rgb.b != 0 && this.STYLE_rgb.g != 255 && this.STYLE_rgb.r == 0) {
+        this.STYLE_rgb.b -= 1;
+        this.STYLE_rgb.g += 1;
+        this.STYLE_borderColor = "rgb("+ this.STYLE_rgb.r + ',' + this.STYLE_rgb.g + ',' + this.STYLE_rgb.b + ")";
+      }
+      if (this.STYLE_rgb.g != 0 && this.STYLE_rgb.r != 255 && this.STYLE_rgb.b == 0) {
+        this.STYLE_rgb.g -= 1;
+        this.STYLE_rgb.r += 1;
+        this.STYLE_borderColor = "rgb("+ this.STYLE_rgb.r + ',' + this.STYLE_rgb.g + ',' + this.STYLE_rgb.b + ")";
+      }
+      if (this.STYLE_rgb.r != 0 && this.STYLE_rgb.b != 255 && this.STYLE_rgb.g == 0) {
+        this.STYLE_rgb.r -= 1;
+        this.STYLE_rgb.b += 1;
+        this.STYLE_borderColor = "rgb("+ this.STYLE_rgb.r + ',' + this.STYLE_rgb.g + ',' + this.STYLE_rgb.b + ")";
+      }
+    }, 1)
+  }
 
 }

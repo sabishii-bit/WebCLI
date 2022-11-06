@@ -7,10 +7,8 @@ import { Observable } from 'rxjs';
 })
 export class IpServiceService {
 
-  private ip: string;
-
   constructor(private http: HttpClient) { 
-    this.ip = '';
+    
   }
 
   public getIPAddress(): Observable<any> {
